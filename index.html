@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PE 提示词工程</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (Blue Theme)
+           =========================================== */
+        :root {
+            --bg-deep: #0a0f1c;
+            --bg-secondary: #0d1428;
+            --bg-tertiary: #111827;
+            --accent-primary: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-dark: #1e40af;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --accent-warm: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            --title-size: clamp(2rem, 6vw, 5rem);
+            --h2-size: clamp(1.5rem, 4vw, 3rem);
+            --h3-size: clamp(1.25rem, 3vw, 2rem);
+            --body-size: clamp(0.85rem, 1.5vw, 1.1rem);
+            --slide-padding: clamp(1.5rem, 4vw, 4rem);
+            --content-gap: clamp(1rem, 2vw, 2rem);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* ===========================================
+           VIEWPORT FITTING (Mandatory)
+           =========================================== */
+        html { scroll-snap-type: y mandatory; }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg-deep);
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ===========================================
+           BACKGROUND EFFECTS
+           =========================================== */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        .gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .glow-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0.3;
+        }
+
+        .glow-line.top { top: 20%; }
+        .glow-line.bottom { bottom: 20%; }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
+
+        /* Glitch effect for titles */
+        .glitch-text {
+            position: relative;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide.visible .glitch-text::before {
+            animation: glitch-1 0.5s ease forwards;
+            color: var(--accent-warm);
+            z-index: -1;
+        }
+
+        .slide.visible .glitch-text::after {
+            animation: glitch-2 0.5s ease forwards;
+            color: var(--accent-primary);
+            z-index: -2;
+        }
+
+        @keyframes glitch-1 {
+            0% { clip-path: inset(0 0 100% 0); transform: translateX(-5px); }
+            20% { clip-path: inset(40% 0 40% 0); transform: translateX(5px); }
+            40% { clip-path: inset(80% 0 10% 0); transform: translateX(-3px); }
+            60% { clip-path: inset(10% 0 80% 0); transform: translateX(3px); }
+            80% { clip-path: inset(50% 0 30% 0); transform: translateX(-2px); }
+            100% { clip-path: inset(0); transform: translateX(0); opacity: 0; }
+        }
+
+        @keyframes glitch-2 {
+            0% { clip-path: inset(100% 0 0 0); transform: translateX(5px); }
+            20% { clip-path: inset(40% 0 40% 0); transform: translateX(-5px); }
+            40% { clip-path: inset(10% 0 80% 0); transform: translateX(3px); }
+            60% { clip-path: inset(80% 0 10% 0); transform: translateX(-3px); }
+            80% { clip-path: inset(30% 0 50% 0); transform: translateX(2px); }
+            100% { clip-path: inset(0); transform: translateX(0); opacity: 0; }
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        .eyebrow {
+            font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        .slide-title {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .slide-title span.accent {
+            color: var(--accent-primary);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .slide-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 700px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===========================================
+           CONTENT COMPONENTS
+           =========================================== */
+        .highlight-box {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 3vw, 2.5rem);
+            margin: 1rem 0;
+        }
+
+        .highlight-box strong {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .example-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 12px;
+            padding: clamp(1.25rem, 2.5vw, 2rem);
+            margin: 1rem 0;
+        }
+
+        .example-box .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-warm);
+            margin-bottom: 0.75rem;
+        }
+
+        .example-box p, .example-box li {
+            color: var(--text-secondary);
+            font-size: clamp(0.85rem, 1.4vw, 1rem);
+            line-height: 1.6;
+        }
+
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.75rem, 1.5vh, 1.25rem);
+        }
+
+        .bullet-list li {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .bullet-list li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        .bullet-list li strong {
+            color: var(--text-primary);
+        }
+
+        /* Cards grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+            gap: clamp(1rem, 2vw, 1.5rem);
+            margin-top: 1.5rem;
+        }
+
+        .info-card {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: clamp(1.25rem, 2.5vw, 2rem);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+        }
+
+        .info-card h3 {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .info-card p {
+            font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Code/terminal style box */
+        .code-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            font-family: 'Space Grotesk', monospace;
+            font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent-primary);
+            margin: 1rem 0;
+        }
+
+        .code-box .comment {
+            color: var(--text-muted);
+        }
+
+        /* Comparison boxes */
+        .compare-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: clamp(1rem, 2vw, 2rem);
+            margin-top: 1.5rem;
+        }
+
+        .compare-box {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: clamp(1.25rem, 2.5vw, 2rem);
+        }
+
+        .compare-box h4 {
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .compare-box p {
+            font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-warm));
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: fixed;
+            right: clamp(1rem, 2vw, 2rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-glow);
+            transform: scale(1.3);
+        }
+
+        /* Section badge */
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            font-weight: 500;
+            color: var(--accent-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .section-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-primary);
+        }
+
+        /* Formula display */
+        .formula {
+            font-family: var(--font-display);
+            font-size: clamp(1.25rem, 3vw, 2rem);
+            color: var(--text-primary);
+            text-align: center;
+            padding: clamp(1.5rem, 3vw, 2.5rem);
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .formula .operator {
+            color: var(--accent-warm);
+            margin: 0 0.5rem;
+        }
+
+        .formula .equals {
+            color: var(--accent-primary);
+            margin: 0 0.5rem;
+        }
+
+        /* Detail text */
+        .detail-text {
+            font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-top: 0.75rem;
+        }
+
+        /* Tag style */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--accent-light);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        /* ===========================================
+           SPECIAL SLIDE LAYOUTS
+           =========================================== */
+
+        /* Title slide */
+        .title-slide .slide-content {
+            text-align: center;
+            align-items: center;
+        }
+
+        .title-slide .eyebrow {
+            padding: 0.5rem 1.5rem;
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .title-slide .slide-title {
+            text-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        /* Two column layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 4vw, 4rem);
+            align-items: start;
+        }
+
+        /* Chapter divider */
+        .chapter-divider {
+            text-align: center;
+        }
+
+        .chapter-divider .chapter-num {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 700;
+            color: var(--accent-primary);
+            opacity: 0.15;
+            line-height: 1;
+        }
+
+        /* Timeline/Steps */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-primary);
+            color: var(--bg-deep);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .step-content h4 {
+            font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .step-content p {
+            font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .step-content .example {
+            font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+            color: var(--accent-warm);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Quote box */
+        .quote-box {
+            border-left: 3px solid var(--accent-warm);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .quote-box p {
+            font-size: clamp(1rem, 2vw, 1.35rem);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .quote-box .attribution {
+            font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+            font-style: normal;
+        }
+
+        /* Definition box */
+        .definition-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(30, 64, 175, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: clamp(1.25rem, 2.5vw, 2rem);
+            margin: 1rem 0;
+        }
+
+        .definition-box h4 {
+            color: var(--accent-primary);
+            font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .definition-box p {
+            color: var(--text-secondary);
+            font-size: clamp(0.85rem, 1.4vw, 1rem);
+            line-height: 1.7;
+        }
+
+        /* ===========================================
+           INLINE EDITING
+           =========================================== */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .edit-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            color: var(--accent-primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-toggle.show,
+        .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .edit-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-primary);
+            color: var(--bg-deep);
+        }
+
+        .edit-mode [contenteditable="true"] {
+            outline: 2px dashed var(--accent-primary);
+            outline-offset: 4px;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .edit-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+        }
+
+        .edit-mode .edit-hint {
+            opacity: 1;
+        }
+
+        /* ===========================================
+           RESPONSIVE BREAKPOINTS
+           =========================================== */
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .compare-row {
+                grid-template-columns: 1fr;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .slide-content {
+                padding: 1rem;
+            }
+            .nav-dots {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation Dots -->
+    <nav class="nav-dots" id="navDots"></nav>
+
+    <!-- Edit Toggle -->
+    <div class="edit-hotzone"></div>
+    <button class="edit-toggle" id="editToggle" title="编辑模式 (按 E 键)">✏️</button>
+    <div class="edit-hint">点击文字即可编辑 · Ctrl+S 保存 · 再次点击按钮退出编辑</div>
+
+    <!-- ===========================================
+         SLIDE 1: TITLE
+         =========================================== -->
+    <section class="slide title-slide" data-slide="1">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+        <div class="glow-line top"></div>
+        <div class="glow-line bottom"></div>
+
+        <div class="slide-content">
+            <p class="eyebrow reveal reveal-delay-1">Prompt Engineering</p>
+            <h1 class="slide-title glitch-text reveal reveal-delay-2" data-text="提示词工程">提示词工程</h1>
+            <p class="slide-subtitle reveal reveal-delay-3">
+                在不修改大模型参数的前提下，通过设计、优化、结构化自然语言指令，<br>
+                精准引导 AI 理解意图、输出稳定、高质量结果的技术与方法论
+            </p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 2: ONE SENTENCE
+         =========================================== -->
+    <section class="slide" data-slide="2">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">一句话记住</span>
+            <div class="highlight-box reveal reveal-delay-2">
+                <p style="font-size: clamp(1.25rem, 3vw, 2rem); color: var(--text-primary); line-height: 1.6; text-align: center;">
+                    <strong style="color: var(--accent-primary);">PE</strong> <span style="color: var(--text-muted);">=</span> 用<span style="color: var(--accent-primary);">精准、结构化</span>的自然语言，<br>
+                    给 AI 写 <span style="color: var(--accent-warm);">"程序"</span>，让它稳定输出你想要的结果
+                </p>
+            </div>
+            <p class="reveal reveal-delay-3" style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">
+                核心：把模糊的需求转化为 AI 能精确执行的指令
+            </p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 3: CHAPTER 1 - AI BASICS
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="3">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">01</div>
+            <span class="section-badge reveal reveal-delay-2">第一章</span>
+            <h2 class="section-title reveal reveal-delay-3">回顾大模型通用原理</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">从人工智能到生成式AI的技术演进</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 4: AI CONCEPTS HIERARCHY
+         =========================================== -->
+    <section class="slide" data-slide="4">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">AI 概念层级</span>
+
+            <div class="cards-grid reveal reveal-delay-2">
+                <div class="info-card">
+                    <h3>🤖 人工智能 AI</h3>
+                    <p>具备人类智能水平的系统，能感知、推理、学习和决策</p>
+                    <p class="detail-text"><strong>示例：</strong>AlphaGo、自动驾驶、语音助手</p>
+                </div>
+                <div class="info-card">
+                    <h3>🧠 机器学习 ML</h3>
+                    <p>从数据中自动学习规律的算法，无需显式编程</p>
+                    <p class="detail-text"><strong>示例：</strong>垃圾邮件过滤、推荐系统、房价预测</p>
+                </div>
+                <div class="info-card">
+                    <h3>🔗 深度学习 DL</h3>
+                    <p>使用多层神经网络的机器学习，能自动提取特征</p>
+                    <p class="detail-text"><strong>示例：</strong>人脸识别、语音识别、机器翻译</p>
+                </div>
+                <div class="info-card">
+                    <h3>💬 大语言模型 LLM</h3>
+                    <p>基于 Transformer 架构，参数量巨大（数十亿到数千亿）</p>
+                    <p class="detail-text"><strong>示例：</strong>GPT-4、Claude、DeepSeek、Kimi</p>
+                </div>
+            </div>
+
+            <div class="code-box reveal reveal-delay-3" style="margin-top: 1.5rem;">
+                <span class="comment">// 包含关系：人工智能 ⊃ 机器学习 ⊃ 深度学习 ⊃ 大语言模型</span><br>
+                <span style="color: var(--text-muted);">就像：</span><span style="color: var(--accent-primary);">交通工具</span> ⊃ <span style="color: var(--accent-primary);">汽车</span> ⊃ <span style="color: var(--accent-primary);">电动汽车</span> ⊃ <span style="color: var(--accent-primary);">特斯拉</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: GenAI CONCEPT
+         =========================================== -->
+    <section class="slide" data-slide="5">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">GenAI 生成式人工智能</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>📖 定义</h4>
+                <p>能<strong style="color: var(--text-primary);">自主生成新内容</strong>（文字、图片、音频、视频、代码等），而不只是简单识别、分类或分析的 AI。它从训练数据中学习模式，然后创造全新的、从未存在过的输出。</p>
+            </div>
+
+            <div class="compare-row reveal reveal-delay-3">
+                <div class="compare-box">
+                    <h4 style="color: var(--text-muted);">传统 AI（判别式）</h4>
+                    <p>只能「<strong style="color: var(--text-primary);">看懂</strong>」你发的内容，无法创造新内容。本质是<strong>分类器</strong>或<strong>预测器</strong>。</p>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">典型应用</div>
+                        <p>• 人脸识别：判断「这是谁」<br>• 垃圾邮件检测：判断「这是否垃圾」<br>• 图像分类：判断「图里有猫还是狗」</p>
+                    </div>
+                </div>
+                <div class="compare-box">
+                    <h4 style="color: var(--accent-primary);">生成式 AI（GenAI）</h4>
+                    <p>能根据你的需求，<strong style="color: var(--text-primary);">创造出全新内容</strong>。本质是<strong>创作者</strong>或<strong>生成器</strong>。</p>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">典型应用</div>
+                        <p>• ChatGPT：写一篇关于量子力学的科普文章<br>• Midjourney：画一幅「赛博朋克风格的城市夜景」<br>• GitHub Copilot：根据注释自动生成代码</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 6: CHAPTER 2 - TRAINING
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="6">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">02</div>
+            <span class="section-badge reveal reveal-delay-2">第二章</span>
+            <h2 class="section-title reveal reveal-delay-3">大模型训练的流程、技术和局限性</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">预训练 → 微调 → 强化学习</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 7: PRE-TRAINING
+         =========================================== -->
+    <section class="slide" data-slide="7">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">阶段一：预训练 Pre-training</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>🎯 核心概念</h4>
+                <p>使用<strong style="color: var(--text-primary);">海量无标注数据</strong>进行训练，让模型学习语言的基本规律、语法结构、世界知识和推理模式。这是一个<strong>无监督学习</strong>过程。</p>
+            </div>
+
+            <div class="two-col reveal reveal-delay-3">
+                <div>
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">训练数据来源</h4>
+                    <ul class="bullet-list">
+                        <li>互联网网页（Common Crawl）</li>
+                        <li>书籍和文学作品</li>
+                        <li>维基百科等百科知识</li>
+                        <li>代码仓库（GitHub）</li>
+                        <li>学术论文和期刊</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">学习到什么？</h4>
+                    <ul class="bullet-list">
+                        <li>词语之间的关联关系</li>
+                        <li>语法和句法规则</li>
+                        <li>常识和事实知识</li>
+                        <li>简单的逻辑推理</li>
+                        <li>不同领域的专业术语</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="example-box reveal reveal-delay-4">
+                <div class="label">具体示例</div>
+                <p>GPT-3 的训练数据包含约 <strong style="color: var(--accent-primary);">45TB</strong> 的文本数据，相当于数百万本书。通过预测「下一个词」的任务，模型学会了「巴黎是法国的首都」、「2+2=4」、「水的化学式是H₂O」等知识。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 8: SFT & RLHF
+         =========================================== -->
+    <section class="slide" data-slide="8">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">阶段二 & 三：微调与强化学习</span>
+
+            <div class="steps-list reveal reveal-delay-2">
+                <div class="step-item">
+                    <span class="step-num">2</span>
+                    <div class="step-content">
+                        <h4>SFT 监督微调 Supervised Fine-Tuning</h4>
+                        <p>使用<strong style="color: var(--text-primary);">人工标注的高质量对话数据</strong>继续训练。这些数据包含「问题-回答」对，让模型学习如何以对话形式回应人类。</p>
+                        <p class="example">例如：标注员编写「请解释量子力学」→「量子力学是研究微观粒子...」这样的高质量样本</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <span class="step-num">3</span>
+                    <div class="step-content">
+                        <h4>RLHF 人类反馈强化学习</h4>
+                        <p>让模型生成多个回答，人类标注员对回答进行<strong style="color: var(--text-primary);">质量排序</strong>（哪个更好），模型根据反馈调整策略，使输出更符合人类偏好。</p>
+                        <p class="example">例如：模型回答「如何投资股票？」时，RLHF 会让它倾向于给出合规、负责任的建议，而非高风险投机策略</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box reveal reveal-delay-3">
+                <p style="color: var(--text-secondary); text-align: center;">
+                    <strong style="color: var(--accent-primary);">关键区别：</strong>预训练让模型「会说话」，SFT 让模型「会对话」，RLHF 让模型「说人话」（符合人类价值观和偏好）
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 9: TRANSFORMER ARCHITECTURE
+         =========================================== -->
+    <section class="slide" data-slide="9">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">Transformer 架构</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>🔧 核心机制</h4>
+                <p>通过<strong style="color: var(--text-primary);">编码器（Encoder）和解码器（Decoder）</strong>，将人类语言转化为机器可理解的语义向量，处理后再解码回自然语言。</p>
+            </div>
+
+            <div class="two-col reveal reveal-delay-3">
+                <div class="info-card">
+                    <h3 style="color: var(--accent-warm);">BERT · 双向编码器</h3>
+                    <p><strong style="color: var(--text-primary);">特点：</strong>只会「看懂、理解」，不会「主动生成」</p>
+                    <p style="margin-top: 0.75rem;"><strong>擅长任务：</strong></p>
+                    <ul class="bullet-list" style="margin-top: 0.5rem;">
+                        <li>情感分析：「这条评论是正面还是负面？」</li>
+                        <li>文本分类：「这封邮件属于哪个类别？」</li>
+                        <li>语义检索：RAG 系统中的文档编码</li>
+                        <li>命名实体识别：「找出文本中的人名、地名」</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: var(--accent-primary);">GPT · 生成式预训练</h3>
+                    <p><strong style="color: var(--text-primary);">特点：</strong>擅长「生成新内容」，是 GenAI 的核心</p>
+                    <p style="margin-top: 0.75rem;"><strong>擅长任务：</strong></p>
+                    <ul class="bullet-list" style="margin-top: 0.5rem;">
+                        <li>文本生成：「写一篇关于AI的散文」</li>
+                        <li>代码生成：「用Python写一个快速排序」</li>
+                        <li>对话系统：ChatGPT、Claude 等</li>
+                        <li>创意写作：故事、诗歌、剧本</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="code-box reveal reveal-delay-4" style="text-align: center; margin-top: 1.5rem;">
+                <span style="color: var(--text-muted);">一句话区别：</span>BERT "能看不会说"（理解型）<span style="color: var(--accent-primary);">vs</span> GPT "能说会写"（生成型）
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 10: GENERALIZATION
+         =========================================== -->
+    <section class="slide" data-slide="10">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">泛化能力 Generalization</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>📖 定义</h4>
+                <p>模型从训练数据中学习到<strong style="color: var(--text-primary);">抽象出的通用规律和模式</strong>，遇到类似但从未见过的新任务或问题时，能够有效迁移应用，解决新问题的能力。</p>
+            </div>
+
+            <div class="example-box reveal reveal-delay-3">
+                <div class="label">具体示例</div>
+                <p>模型在训练时学习了成千上万篇关于「猫」的文章和图片描述。当被问到「为什么猫喜欢盒子？」时——这个问题从未在训练数据中出现过——模型能够结合学到的知识（猫喜欢安全感、盒子提供封闭空间）给出合理的回答。这就是<strong style="color: var(--accent-primary);">泛化能力</strong>。</p>
+            </div>
+
+            <div class="highlight-box reveal reveal-delay-4">
+                <p style="color: var(--text-primary); text-align: center;">
+                    <strong style="color: var(--accent-primary);">关键：</strong>不是死记硬背训练数据，而是理解底层规律，举一反三
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 11: UNDER/OVER FITTING
+         =========================================== -->
+    <section class="slide" data-slide="11">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">欠拟合 vs 过拟合</span>
+
+            <div class="compare-row reveal reveal-delay-2">
+                <div class="compare-box" style="border-left: 3px solid #ef4444;">
+                    <h4 style="color: #ef4444;">欠拟合 Underfitting</h4>
+                    <p style="margin-bottom: 1rem;"><strong style="color: var(--text-primary);">问题：</strong>模型连训练数据的规律都没学好</p>
+                    <p><strong style="color: var(--text-primary);">表现：</strong></p>
+                    <ul class="bullet-list">
+                        <li>训练数据上准确率就很低</li>
+                        <li>新数据上表现更差</li>
+                        <li>输出的结果逻辑混乱、不准确</li>
+                    </ul>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">通俗解释</div>
+                        <p>「没学会，还得练」——就像学生连课本例题都没搞懂，考试肯定不及格</p>
+                    </div>
+                </div>
+                <div class="compare-box" style="border-left: 3px solid var(--accent-primary);">
+                    <h4 style="color: var(--accent-primary);">过拟合 Overfitting</h4>
+                    <p style="margin-bottom: 1rem;"><strong style="color: var(--text-primary);">问题：</strong>模型过度拟合训练数据的细节</p>
+                    <p><strong style="color: var(--text-primary);">表现：</strong></p>
+                    <ul class="bullet-list">
+                        <li>训练数据上表现极好（几乎完美）</li>
+                        <li>新数据上表现急剧下降</li>
+                        <li>只能「背题」，不会举一反三</li>
+                    </ul>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">通俗解释</div>
+                        <p>「学死了，只会背题」——就像学生把练习题答案背得滚瓜烂熟，但换种问法就完全不会</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quote-box reveal reveal-delay-3">
+                <p>训练目标：找到<span style="color: var(--accent-primary);">泛化能力最强</span>的「甜蜜点」——既不过拟合，也不欠拟合</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 12: EMERGENCE ABILITIES
+         =========================================== -->
+    <section class="slide" data-slide="12">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">涌现能力 Emergent Abilities</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>📖 定义</h4>
+                <p>当模型参数量突破一定规模时，大模型表现出<strong style="color: var(--text-primary);">训练时未曾显式教授的新智能</strong>，能够解决之前无法解决的困难问题。这不是线性增长，而是「量变引起质变」。</p>
+            </div>
+
+            <div class="steps-list reveal reveal-delay-3">
+                <div class="step-item">
+                    <span class="step-num" style="background: var(--accent-primary);">10B</span>
+                    <div class="step-content">
+                        <h4>少样本上下文学习 In-Context Learning · 「开眼」</h4>
+                        <p>模型规模达到<strong style="color: var(--text-primary);">100亿参数</strong>时，只需提供少量示例（少样本），模型就能快速学习任务模式，无需重新训练。</p>
+                        <p class="example">示例：给模型3个「法语→英语」翻译例子，它就能翻译新的法语句子，即使从未专门训练过翻译任务</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <span class="step-num" style="background: var(--accent-warm);">100B</span>
+                    <div class="step-content">
+                        <h4>指令跟随 Instruction Following · 「开耳」</h4>
+                        <p>参数超过<strong style="color: var(--text-primary);">1000亿</strong>时，模型突然能理解复杂的多轮、多约束指令，甚至揣测模糊指令背后的意图。</p>
+                        <p class="example">示例：「用简单的语言向一个10岁孩子解释量子力学，举两个生活中的例子，不超过150字」——模型能同时满足所有约束</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <span class="step-num" style="background: #8b5cf6;">500B</span>
+                    <div class="step-content">
+                        <h4>思维链推理 Chain-of-Thought · 「开窍」</h4>
+                        <p>规模超过<strong style="color: var(--text-primary);">5000亿</strong>后，模型能进行多步推理，拆解复杂问题，逐步求解。</p>
+                        <p class="example">示例：当提示「让我们一步一步思考」时，模型能解决小学奥数题：「小明有12个苹果，给了小红3个，又买了5个，现在有几个？」——会逐步计算：12-3=9，9+5=14</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 13: LLM LIMITATIONS
+         =========================================== -->
+    <section class="slide" data-slide="13">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">大模型的局限性</span>
+
+            <div class="cards-grid reveal reveal-delay-2">
+                <div class="info-card">
+                    <h3>⏰ 时效性</h3>
+                    <p><strong style="color: var(--text-primary);">问题：</strong>训练有截止时间，无法获取最新信息</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">具体示例</div>
+                        <p>GPT-4 的知识截止到2024年初。如果你问「2024年巴黎奥运会中国获得多少金牌？」，它可能无法准确回答。</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3>👻 模型幻觉 Hallucination</h3>
+                    <p><strong style="color: var(--text-primary);">问题：</strong>生成看似合理但实际错误的内容</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">具体示例</div>
+                        <p>模型可能自信地说「爱因斯坦获得了1952年的诺贝尔文学奖」，听起来很专业，但实际上是假的。</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3>📚 专业性不足</h3>
+                    <p><strong style="color: var(--text-primary);">问题：</strong>特定领域深度知识有限</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">具体示例</div>
+                        <p>对于最新的医学研究、法律判例、特定公司的内部技术等，模型可能给出过时或泛泛的回答。</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3>🔒 安全隐患</h3>
+                    <p><strong style="color: var(--text-primary);">问题：</strong>可能输出有害内容或敏感信息</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">具体示例</div>
+                        <p>可能被诱导生成歧视性言论、危险操作指南，或在某些情况下泄露训练数据中的隐私信息。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 14: CHAPTER 3 - PROMPT TYPES
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="14">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">03</div>
+            <span class="section-badge reveal reveal-delay-2">第三章</span>
+            <h2 class="section-title reveal reveal-delay-3">提示词的分类</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">系统提示词 vs 用户提示词</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 15: PROMPT FLOW
+         =========================================== -->
+    <section class="slide" data-slide="15">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">Prompt → LLM → Response</span>
+
+            <div class="formula reveal reveal-delay-2">
+                <span style="color: var(--accent-primary);">Prompt</span>
+                <span class="operator">→</span>
+                <span style="color: var(--text-muted);">[</span><span style="color: var(--accent-warm);">LLM</span><span style="color: var(--text-muted);">]</span>
+                <span class="operator">→</span>
+                <span style="color: var(--accent-primary);">Response</span>
+            </div>
+
+            <div class="two-col reveal reveal-delay-3">
+                <div class="definition-box">
+                    <h4>🔧 系统提示词 System Prompt</h4>
+                    <p>定义模型的<strong style="color: var(--text-primary);">角色、行为准则和约束条件</strong>。相当于给 AI 设定「人设」和「工作守则」。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「你是一位专业的Python程序员。请用中文回答，代码要有详细注释。不要提供任何有害或违法的内容。」</p>
+                    </div>
+                </div>
+                <div class="definition-box">
+                    <h4>💬 用户提示词 User Prompt</h4>
+                    <p>用户的<strong style="color: var(--text-primary);">具体问题和任务</strong>。这是每次对话中变化的部分。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「帮我写一个函数，用递归实现斐波那契数列，要求时间复杂度优化。」</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box reveal reveal-delay-4">
+                <p style="color: var(--text-secondary); text-align: center;">
+                    <strong style="color: var(--accent-primary);">类比：</strong>系统提示词 = 餐厅的服务标准；用户提示词 = 客人的具体点餐
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 16: SCENARIO EXAMPLE
+         =========================================== -->
+    <section class="slide" data-slide="16">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">场景示例：「我饿了」</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>💡 核心洞察</h4>
+                <p>同样的用户提示词「我饿了」，在不同的<strong style="color: var(--text-primary);">系统提示词（场景）</strong>下，会得到完全不同的回答。</p>
+            </div>
+
+            <div class="cards-grid reveal reveal-delay-3">
+                <div class="info-card">
+                    <h3 style="color: var(--accent-primary);">场景 A：餐厅服务员</h3>
+                    <p><strong style="color: var(--text-primary);">系统提示词：</strong>你是餐厅服务员，热情推荐菜品</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 回答</div>
+                        <p>「欢迎光临！今天我们特推香煎牛排和海鲜意面，都是招牌菜，需要我为您详细介绍吗？」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: var(--accent-warm);">场景 B：营养师</h3>
+                    <p><strong style="color: var(--text-primary);">系统提示词：</strong>你是营养师，关注健康膳食</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 回答</div>
+                        <p>「饥饿时建议先喝一杯温水，然后选择富含蛋白质的食物，如鸡蛋或希腊酸奶，避免高糖零食。」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #8b5cf6;">场景 C：健身教练</h3>
+                    <p><strong style="color: var(--text-primary);">系统提示词：</strong>你是健身教练，关注增肌减脂</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 回答</div>
+                        <p>「运动后30分钟内是补充窗口期，建议摄入25g乳清蛋白+40g快碳（香蕉或白面包），促进肌肉恢复。」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #10b981;">场景 D：妈妈</h3>
+                    <p><strong style="color: var(--text-primary);">系统提示词：</strong>你是关心孩子的妈妈</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 回答</div>
+                        <p>「又饿了？厨房有红烧肉和米饭，趁热吃。别老吃外卖，不健康。吃完记得把碗洗了~」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 17: WHY SEPARATE PROMPTS
+         =========================================== -->
+    <section class="slide" data-slide="17">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">为什么要区分？</span>
+
+            <div class="two-col reveal reveal-delay-2">
+                <div class="definition-box">
+                    <h4>🧠 原因一：上下文窗口有限</h4>
+                    <p>LLM 单次能处理的 token 数量（上下文窗口）是有限的。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">具体数据</div>
+                        <p>• GPT-4: 128K tokens（约 9.6万汉字）<br>• Claude 3: 200K tokens<br>• DeepSeek-R1: 128K tokens（约 6万汉字）</p>
+                    </div>
+                    <p style="margin-top: 0.75rem;">将「角色设定」分离出来，可以避免每次对话都重复占用宝贵的上下文空间。</p>
+                </div>
+                <div class="definition-box">
+                    <h4>⚡ 原因二：保证效率与质量</h4>
+                    <p>如果不区分，把「角色设定」和「具体问题」混在一起，AI 可能混淆「身份」和「任务」。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">对比</div>
+                        <p><strong>不区分：</strong>「你是个医生，什么是量子力学？」→ AI 可能困惑<br><br><strong>区分后：</strong>系统「你是物理学家」+ 用户「什么是量子力学？」→ 输出更专业</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quote-box reveal reveal-delay-3">
+                <p>核心目的：让 AI 分清<strong style="color: var(--accent-primary);">「指令边界」</strong>，避免混淆角色、需求和约束，提升输出的稳定性和精准度</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 18: CHAPTER 4 - HOW TO USE
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="18">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">04</div>
+            <span class="section-badge reveal reveal-delay-2">第四章</span>
+            <h2 class="section-title reveal reveal-delay-3">怎么用好提示词？</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">从基础技巧到高级策略</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 19: MARKDOWN & DIRECT QUESTION
+         =========================================== -->
+    <section class="slide" data-slide="19">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">基础技巧</span>
+
+            <div class="two-col reveal reveal-delay-2">
+                <div>
+                    <div class="definition-box">
+                        <h4>📝 技巧一：使用 Markdown 语法</h4>
+                        <p>用结构化格式让 AI 更好理解层次和重点。</p>
+                    </div>
+                    <div class="example-box">
+                        <div class="label">对比示例</div>
+                        <p><strong style="color: #ef4444;">❌ 差：</strong>「请解释一下机器学习深度学习神经网络的区别还有它们的关系」</p>
+                        <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-primary);">✅ 好：</strong></p>
+                        <div class="code-box" style="margin-top: 0.5rem; font-size: 0.75rem;">
+请解释以下概念及其关系：<br><br>
+## 1. 机器学习（Machine Learning）<br>
+## 2. 深度学习（Deep Learning）<br>
+## 3. 神经网络（Neural Network）<br><br>
+**要求：**<br>
+- 用表格对比三者的定义<br>
+- 说明它们的包含关系<br>
+- 各举一个实际应用例子
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="definition-box">
+                        <h4>❓ 技巧二：直接提问 & 正向提问</h4>
+                        <p>告诉 AI「要做什么」，而不是「不要做什么」。正向指令更明确。</p>
+                    </div>
+                    <div class="example-box">
+                        <div class="label">对比示例</div>
+                        <p><strong style="color: #ef4444;">❌ 差：</strong>「不要用太复杂的词，不要写太长，不要太学术」</p>
+                        <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-primary);">✅ 好：</strong>「请用通俗易懂的语言解释，控制在200字以内，适合高中生理解」</p>
+                    </div>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">为什么正向更好？</div>
+                        <p>AI 对「不要做什么」的理解往往不如「要做什么」明确。正向指令直接告诉模型目标状态，而负向指令只是排除了某些选项，留下了大量模糊空间。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 20: CHAIN OF THOUGHT
+         =========================================== -->
+    <section class="slide" data-slide="20">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">高级技巧：思维链推理</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>🧠 Chain-of-Thought (CoT) 思维链</h4>
+                <p>通过提示词引导模型<strong style="color: var(--text-primary);">「一步一步思考」</strong>，将复杂问题拆解成多个简单步骤，显著提升推理准确性。这是 GPT-4 等大模型展现「涌现能力」的关键技巧。</p>
+            </div>
+
+            <div class="compare-row reveal reveal-delay-3">
+                <div class="compare-box">
+                    <h4 style="color: #ef4444;">❌ 不使用 CoT</h4>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">提示词</div>
+                        <p>「一个农场有鸡和兔共35只，脚共94只。鸡兔各几只？」</p>
+                    </div>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 可能直接给答案</div>
+                        <p>「鸡23只，兔12只」（可能是对的，也可能是蒙的，没有过程）</p>
+                    </div>
+                </div>
+                <div class="compare-box">
+                    <h4 style="color: var(--accent-primary);">✅ 使用 CoT</h4>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">提示词</div>
+                        <p>「一个农场有鸡和兔共35只，脚共94只。鸡兔各几只？<strong style="color: var(--accent-primary);">让我们一步一步思考。</strong>」</p>
+                    </div>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">AI 回答</div>
+                        <p>「设鸡x只，兔y只<br>① x + y = 35<br>② 2x + 4y = 94<br>由①得 x = 35-y<br>代入②: 2(35-y) + 4y = 94<br>70 - 2y + 4y = 94<br>2y = 24, y = 12<br>x = 35-12 = 23<br>∴ 鸡23只，兔12只」</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box reveal reveal-delay-4">
+                <p style="color: var(--text-secondary); text-align: center;">
+                    <strong style="color: var(--accent-primary);">魔法短语：</strong>「Let's think step by step」「让我们一步一步思考」「请详细说明你的推理过程」
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 21: FEW-SHOT LEARNING
+         =========================================== -->
+    <section class="slide" data-slide="21">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">ICL 上下文学习</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>🎯 In-Context Learning (ICL) 上下文学习</h4>
+                <p>通过给模型提供<strong style="color: var(--text-primary);">0-5个示例</strong>，让模型在上下文中学习任务模式，无需重新训练模型。这是大模型「少样本学习」能力的直接应用。</p>
+            </div>
+
+            <div class="two-col reveal reveal-delay-3">
+                <div>
+                    <div class="example-box">
+                        <div class="label">零样本 Zero-Shot（无示例）</div>
+                        <div class="code-box" style="font-size: 0.75rem; margin-top: 0.5rem;">
+将以下中文翻译成英文：<br>
+「我爱编程」
+                        </div>
+                    </div>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">少样本 Few-Shot（带示例）</div>
+                        <div class="code-box" style="font-size: 0.75rem; margin-top: 0.5rem;">
+将以下中文翻译成正式英文：<br><br>
+中文：你好<br>
+英文：Greetings<br><br>
+中文：谢谢<br>
+英文：I appreciate your assistance<br><br>
+中文：我爱编程<br>
+英文：
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">ICL 的优势</h4>
+                    <ul class="bullet-list">
+                        <li><strong>无需训练：</strong>不需要调整模型参数</li>
+                        <li><strong>即时适应：</strong>快速切换到新任务</li>
+                        <li><strong>灵活可控：</strong>通过示例引导输出风格</li>
+                        <li><strong>低门槛：</strong>不需要机器学习专业知识</li>
+                    </ul>
+                    <div class="example-box" style="margin-top: 1rem;">
+                        <div class="label">应用场景</div>
+                        <p>• 特定格式输出（JSON、Markdown表格）<br>• 风格迁移（正式/ casual /幽默）<br>• 新任务快速适配</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 22: PROMPT TEMPLATE
+         =========================================== -->
+    <section class="slide" data-slide="22">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">提示词模板</span>
+
+            <div class="code-box reveal reveal-delay-2" style="font-size: clamp(0.7rem, 1.2vw, 0.85rem); line-height: 1.7;">
+<span style="color: var(--accent-primary);">## 角色设定</span><br>
+你是「资深XX（如：AI产品经理、Python工程师、RAG检索专家）」，<br>
+具备「XX领域」3年以上经验，专业、严谨，精准理解需求。<br><br>
+<span style="color: var(--accent-primary);">## 核心任务</span><br>
+请你「明确具体任务，1-2句话说清」。<br><br>
+<span style="color: var(--accent-primary);">## 约束要求</span><br>
+1. 不冗余、不瞎编，严格贴合「具体约束」<br>
+2. 拒绝无关内容，不添加额外解释<br>
+3. 遇到模糊点，优先贴合「核心需求重点」<br><br>
+<span style="color: var(--accent-primary);">## 输出格式</span><br>
+「明确格式：如分3点解释、JSON格式、代码+注释」<br><br>
+<span style="color: var(--accent-warm);">## 示例引导（可选）</span><br>
+输入：「示例输入」<br>
+输出：「示例输出」
+            </div>
+
+            <div class="example-box reveal reveal-delay-3" style="margin-top: 1.5rem;">
+                <div class="label">实际应用示例</div>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 0.5rem;">
+## 角色设定<br>
+你是资深Python工程师，具备5年后端开发经验，擅长算法优化和代码重构。<br><br>
+## 核心任务<br>
+请实现一个LRU缓存，支持get和put操作，时间复杂度O(1)。<br><br>
+## 约束要求<br>
+1. 使用Python标准库，不依赖第三方包<br>
+2. 代码要有完整注释说明思路<br>
+3. 包含简单的单元测试代码<br><br>
+## 输出格式<br>
+提供代码+注释，代码可直接运行
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 23: CHAPTER 5 - WHAT IS PROMPT
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="23">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">05</div>
+            <span class="section-badge reveal reveal-delay-2">第五章</span>
+            <h2 class="section-title reveal reveal-delay-3">Prompt 是什么？</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">人类与 AI 沟通的桥梁</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 24: PROMPT ESSENCE
+         =========================================== -->
+    <section class="slide" data-slide="24">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">Prompt 的本质</span>
+
+            <div class="highlight-box reveal reveal-delay-2">
+                <p style="font-size: clamp(1.1rem, 2.2vw, 1.5rem); color: var(--text-primary); line-height: 1.8; text-align: center;">
+                    Prompt 是<strong style="color: var(--accent-primary);">人类和 AI 沟通的语言</strong><br>
+                    是「本意 → <span style="color: var(--accent-primary);">文意</span> → 解意」链条中的<span style="color: var(--accent-warm);">关键桥梁</span>
+                </p>
+            </div>
+
+            <div class="two-col reveal reveal-delay-3" style="margin-top: 1.5rem;">
+                <div class="definition-box">
+                    <h4>🗣️ 沟通的本质</h4>
+                    <p>说话人将自己的<strong style="color: var(--text-primary);">本意</strong>，通过语言编码成<strong style="color: var(--text-primary);">文意</strong>（说出来的话/写下的文字），受话人接收后<strong style="color: var(--text-primary);">解意</strong>（理解含义）。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">人类沟通</div>
+                        <p>本意（想表达）→ 文意（说出的话）→ 解意（对方理解）</p>
+                    </div>
+                </div>
+                <div class="definition-box">
+                    <h4>🤖 人机沟通</h4>
+                    <p>我们将<strong style="color: var(--text-primary);">本意</strong>编码成 Prompt（文意），AI 解码 Prompt 后进行<strong style="color: var(--text-primary);">解意</strong>并生成回复。</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">关键洞察</div>
+                        <p>Prompt 的质量直接决定了 AI 能否正确「解意」。如果 AI 输出不符合预期，问题往往出在 Prompt 上——需要优化你的「文意」表达。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="formula reveal reveal-delay-4" style="margin-top: 1.5rem;">
+                <span style="color: var(--text-secondary);">AI输出效果</span>
+                <span class="equals">=</span>
+                <span style="color: var(--accent-primary);">大模型能力</span>
+                <span class="operator">×</span>
+                <span style="color: var(--accent-warm);">输入提示词质量</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 25: CHAPTER 6 - COLLABORATION
+         =========================================== -->
+    <section class="slide chapter-divider" data-slide="25">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <div class="chapter-num reveal reveal-delay-1">06</div>
+            <span class="section-badge reveal reveal-delay-2">第六章</span>
+            <h2 class="section-title reveal reveal-delay-3">人与 AI 的协作四象限</h2>
+            <p class="slide-subtitle reveal reveal-delay-4">基于乔哈里视窗模型</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 26: JOHARI WINDOW
+         =========================================== -->
+    <section class="slide" data-slide="26">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">乔哈里视窗模型</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>📖 起源</h4>
+                <p>乔哈里视窗（Johari Window）是心理学中用于分析人际沟通的模型。根据<strong style="color: var(--text-primary);">「我是否知道」</strong>和<strong style="color: var(--text-primary);">「对方是否知道」</strong>，将信息分为四个区域。</p>
+            </div>
+
+            <div class="cards-grid reveal reveal-delay-3" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="info-card">
+                    <h3 style="color: var(--accent-primary);">开放区 · 我知你知</h3>
+                    <p>双方都知道的信息，沟通的基础</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「今天是周一」、「2+2=4」、「北京是中国的首都」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: var(--accent-warm);">盲点区 · 我不知你知</h3>
+                    <p>对方知道，但我不知道的信息</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「我衣服后面有污渍」、「我的代码有bug」、「我演讲时语速太快」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #8b5cf6;">隐秘区 · 我知你不知</h3>
+                    <p>我知道，但对方不知道的信息</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「我的真实想法」、「我的专业技能」、「我公司的内部数据」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #10b981;">潜能区 · 我不知你不知</h3>
+                    <p>双方都不知道的信息，需要共同探索</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「明天的股市走势」、「尚未被发现的科学规律」、「创新的商业模式」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 27: FOUR QUADRANTS AI
+         =========================================== -->
+    <section class="slide" data-slide="27">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">AI 领域类比</span>
+
+            <p class="reveal reveal-delay-1" style="color: var(--text-secondary); margin-bottom: 1.5rem;">把「对方」换成「AI」，四个区域对应四种人机协作模式：</p>
+
+            <div class="cards-grid reveal reveal-delay-2" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="info-card">
+                    <h3 style="color: var(--accent-primary);">第一象限 · 助理</h3>
+                    <p><strong style="color: var(--text-primary);">我和 AI 都知道</strong></p>
+                    <p style="margin-top: 0.75rem;"><strong>策略：</strong>把任务解释清楚，确认需求边界，让 AI 帮你执行</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「帮我把这份Excel数据按销售额排序，生成柱状图」——双方都知道数据处理和图表是什么</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: var(--accent-warm);">第二象限 · 老师</h3>
+                    <p><strong style="color: var(--text-primary);">我不知道 AI 知道</strong></p>
+                    <p style="margin-top: 0.75rem;"><strong>策略：</strong>向 AI 提问学习，让它举通俗易懂的例子</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「请用小学生能听懂的话解释什么是区块链，举三个生活中的例子」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #8b5cf6;">第三象限 · 同行者</h3>
+                    <p><strong style="color: var(--text-primary);">我和 AI 都不知道</strong></p>
+                    <p style="margin-top: 0.75rem;"><strong>策略：</strong>一起共创，发散（AI 调研）→ 收拢（你整理）</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「我们都没做过元宇宙教育，一起来头脑风暴可能的商业模式」</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #10b981;">第四象限 · 学生</h3>
+                    <p><strong style="color: var(--text-primary);">我知道 AI 不知道</strong></p>
+                    <p style="margin-top: 0.75rem;"><strong>策略：</strong>给 AI 投喂数据，通过 ICL 少样本学习或微调让它理解</p>
+                    <div class="example-box" style="margin-top: 0.75rem;">
+                        <div class="label">示例</div>
+                        <p>「这是我们公司的内部术语表，学习后用这些术语重写这段话」</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 28: DOUBLE DIAMOND
+         =========================================== -->
+    <section class="slide" data-slide="28">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+
+        <div class="slide-content">
+            <span class="section-badge reveal reveal-delay-1">双钻模型 💎💎</span>
+
+            <div class="definition-box reveal reveal-delay-2">
+                <h4>💎 第三象限的核心工作法</h4>
+                <p>当「我和 AI 都不知道」时，使用<strong style="color: var(--text-primary);">发散 → 收拢 → 再发散 → 再收拢</strong>的双钻模型，高效共创。</p>
+            </div>
+
+            <div class="highlight-box reveal reveal-delay-3">
+                <div style="display: flex; justify-content: space-around; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="text-align: center; flex: 1; min-width: 120px;">
+                        <div style="font-size: clamp(2.5rem, 6vw, 4rem); color: #8b5cf6;">◇</div>
+                        <p style="color: var(--text-secondary); font-size: clamp(0.8rem, 1.5vw, 1rem); margin-top: 0.5rem;"><strong style="color: #8b5cf6;">发散</strong><br>AI 调研<br>收集资料</p>
+                    </div>
+                    <div style="font-size: clamp(1.5rem, 3vw, 2rem); color: var(--text-muted);">→</div>
+                    <div style="text-align: center; flex: 1; min-width: 120px;">
+                        <div style="font-size: clamp(2.5rem, 6vw, 4rem); color: var(--accent-primary);">◆</div>
+                        <p style="color: var(--text-secondary); font-size: clamp(0.8rem, 1.5vw, 1rem); margin-top: 0.5rem;"><strong style="color: var(--accent-primary);">收拢</strong><br>你整理<br>聚焦方向</p>
+                    </div>
+                    <div style="font-size: clamp(1.5rem, 3vw, 2rem); color: var(--text-muted);">→</div>
+                    <div style="text-align: center; flex: 1; min-width: 120px;">
+                        <div style="font-size: clamp(2.5rem, 6vw, 4rem); color: #8b5cf6;">◇</div>
+                        <p style="color: var(--text-secondary); font-size: clamp(0.8rem, 1.5vw, 1rem); margin-top: 0.5rem;"><strong style="color: #8b5cf6;">再发散</strong><br>AI 细化<br>深度探索</p>
+                    </div>
+                    <div style="font-size: clamp(1.5rem, 3vw, 2rem); color: var(--text-muted);">→</div>
+                    <div style="text-align: center; flex: 1; min-width: 120px;">
+                        <div style="font-size: clamp(2.5rem, 6vw, 4rem); color: var(--accent-primary);">◆</div>
+                        <p style="color: var(--text-secondary); font-size: clamp(0.8rem, 1.5vw, 1rem); margin-top: 0.5rem;"><strong style="color: var(--accent-primary);">再收拢</strong><br>你总结<br>形成方案</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-box reveal reveal-delay-4">
+                <div class="label">应用示例：新产品创意</div>
+                <p><strong style="color: #8b5cf6;">发散1：</strong>让 AI 调研100个智能家居产品的创意 → <strong style="color: var(--accent-primary);">收拢1：</strong>你筛选出3个有潜力的方向 → <strong style="color: #8b5cf6;">发散2：</strong>让 AI 深入分析这3个方向的竞品、用户痛点、技术可行性 → <strong style="color: var(--accent-primary);">收拢2：</strong>你决定主攻其中一个方向，形成产品方案</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 29: CLOSING
+         =========================================== -->
+    <section class="slide title-slide" data-slide="29">
+        <div class="grid-bg"></div>
+        <div class="gradient-overlay"></div>
+        <div class="glow-line top"></div>
+        <div class="glow-line bottom"></div>
+
+        <div class="slide-content">
+            <h1 class="slide-title glitch-text reveal reveal-delay-1" data-text="感谢聆听" style="font-size: clamp(2.5rem, 8vw, 6rem);">感谢聆听</h1>
+            <p class="slide-subtitle reveal reveal-delay-2">
+                用精准的语言，与 AI 高效协作
+            </p>
+            <div class="highlight-box reveal reveal-delay-3" style="margin-top: 2rem; max-width: 700px;">
+                <p style="color: var(--text-primary); text-align: center; font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.8;">
+                    <strong style="color: var(--accent-primary);">最终趋势：</strong><br>
+                    随着你不断学习和投喂，<br>
+                    AI 知道的越来越少，你知道的越来越多<br>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">（横纵轴交点持续移向第二象限）</span>
+                </p>
+            </div>
+            <p class="reveal reveal-delay-4" style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+                PE = 用精准、结构化的自然语言，给 AI 写 "程序"
+            </p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         JAVASCRIPT
+         =========================================== -->
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.totalSlides = this.slides.length;
+                this.isEditMode = false;
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+                this.setupEditMode();
+            }
+
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            this.currentSlide = Array.from(this.slides).indexOf(entry.target);
+                            this.updateProgressBar();
+                            this.updateNavDots();
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.getAttribute('contenteditable') === 'true') return;
+
+                    switch(e.key) {
+                        case 'ArrowDown':
+                        case 'ArrowRight':
+                        case ' ':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.nextSlide();
+                            break;
+                        case 'ArrowUp':
+                        case 'ArrowLeft':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.prevSlide();
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.totalSlides - 1);
+                            break;
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartY = 0;
+                let touchEndY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe(touchStartY, touchEndY);
+                }, { passive: true });
+            }
+
+            handleSwipe(startY, endY) {
+                const threshold = 50;
+                const diff = startY - endY;
+
+                if (Math.abs(diff) > threshold) {
+                    if (diff > 0) {
+                        this.nextSlide();
+                    } else {
+                        this.prevSlide();
+                    }
+                }
+            }
+
+            setupProgressBar() {
+                this.progressBar = document.getElementById('progressBar');
+            }
+
+            updateProgressBar() {
+                const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+                this.progressBar.style.width = `${progress}%`;
+            }
+
+            setupNavDots() {
+                const navDotsContainer = document.getElementById('navDots');
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'nav-dot';
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    navDotsContainer.appendChild(dot);
+                });
+                this.navDots = document.querySelectorAll('.nav-dot');
+            }
+
+            updateNavDots() {
+                this.navDots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            nextSlide() {
+                if (this.currentSlide < this.totalSlides - 1) {
+                    this.goToSlide(this.currentSlide + 1);
+                }
+            }
+
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.goToSlide(this.currentSlide - 1);
+                }
+            }
+
+            goToSlide(index) {
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+
+            /* ===========================================
+               INLINE EDITING
+               =========================================== */
+            setupEditMode() {
+                const editToggle = document.getElementById('editToggle');
+                const hotzone = document.querySelector('.edit-hotzone');
+                let hideTimeout = null;
+
+                // Hotzone hover with 400ms grace period
+                hotzone.addEventListener('mouseenter', () => {
+                    clearTimeout(hideTimeout);
+                    editToggle.classList.add('show');
+                });
+
+                hotzone.addEventListener('mouseleave', () => {
+                    hideTimeout = setTimeout(() => {
+                        if (!this.isEditMode) editToggle.classList.remove('show');
+                    }, 400);
+                });
+
+                editToggle.addEventListener('mouseenter', () => {
+                    clearTimeout(hideTimeout);
+                });
+
+                editToggle.addEventListener('mouseleave', () => {
+                    hideTimeout = setTimeout(() => {
+                        if (!this.isEditMode) editToggle.classList.remove('show');
+                    }, 400);
+                });
+
+                // Toggle edit mode
+                editToggle.addEventListener('click', () => this.toggleEditMode());
+                hotzone.addEventListener('click', () => this.toggleEditMode());
+
+                // Keyboard shortcut
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                        this.toggleEditMode();
+                    }
+                });
+
+                // Auto-save on Ctrl+S
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        if (this.isEditMode) {
+                            this.saveContent();
+                        }
+                    }
+                });
+            }
+
+            toggleEditMode() {
+                this.isEditMode = !this.isEditMode;
+                const editToggle = document.getElementById('editToggle');
+                const body = document.body;
+
+                if (this.isEditMode) {
+                    editToggle.classList.add('active');
+                    body.classList.add('edit-mode');
+                    this.makeEditable();
+                } else {
+                    editToggle.classList.remove('active');
+                    body.classList.remove('edit-mode');
+                    this.makeUneditable();
+                }
+            }
+
+            makeEditable() {
+                const editableElements = document.querySelectorAll('.slide-content h1, .slide-content h2, .slide-content h3, .slide-content h4, .slide-content p, .slide-content li');
+                editableElements.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                });
+            }
+
+            makeUneditable() {
+                const editableElements = document.querySelectorAll('[contenteditable="true"]');
+                editableElements.forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+            }
+
+            saveContent() {
+                const content = {};
+                this.slides.forEach((slide, index) => {
+                    const texts = slide.querySelectorAll('h1, h2, h3, h4, p, li');
+                    content[index] = Array.from(texts).map(el => el.textContent);
+                });
+                localStorage.setItem('pe-presentation-content-v2', JSON.stringify(content));
+
+                // Visual feedback
+                const notification = document.createElement('div');
+                notification.textContent = '✓ 已保存到本地存储';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 24px;
+                    background: var(--accent-primary);
+                    color: var(--bg-deep);
+                    border-radius: 8px;
+                    font-weight: 600;
+                    z-index: 10002;
+                    animation: fadeIn 0.3s ease;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 2000);
+            }
+        }
+
+        // Initialize presentation
+        new SlidePresentation();
+    </script>
+</body>
+</html>
