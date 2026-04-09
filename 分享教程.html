@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend-Slides Skill 使用教程</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (ELECTRIC STUDIO THEME)
+           =========================================== */
+        :root {
+            /* Colors */
+            --bg-dark: #0a0a0a;
+            --bg-white: #ffffff;
+            --accent-blue: #4361ee;
+            --text-dark: #0a0a0a;
+            --text-light: #ffffff;
+            --text-gray: #666666;
+
+            /* Typography */
+            --font-display: 'Manrope', sans-serif;
+            --font-body: 'Manrope', sans-serif;
+            --title-size: clamp(1.5rem, 5vw, 4rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+            --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY BASE STYLES
+           Include this ENTIRE file in every presentation.
+           =========================================== */
+
+        /* 1. Lock html/body to viewport */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        /* 2. Each slide = exact viewport height */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 3. Content container with flex for centering */
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        /* 4. ALL typography uses clamp() for responsive scaling */
+        :root {
+            /* Titles scale from mobile to desktop */
+            --title-size: clamp(1.5rem, 5vw, 4rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+            /* Body text */
+            --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+            /* Spacing scales with viewport */
+            --slide-padding: clamp(1rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+        }
+
+        /* 5. Cards/containers use viewport-relative max sizes */
+        .card, .container, .content-box {
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+        }
+
+        /* 6. Lists auto-scale with viewport */
+        .feature-list, .bullet-list {
+            gap: clamp(0.4rem, 1vh, 1rem);
+        }
+
+        .feature-list li, .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.4;
+        }
+
+        /* 7. Grids adapt to available space */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+        }
+
+        /* 8. Images constrained to viewport */
+        img, .image-container {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        /* ===========================================
+           RESPONSIVE BREAKPOINTS
+           =========================================== */
+
+        /* Short viewports (< 700px height) */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1rem, 3vw, 1.75rem);
+            }
+        }
+
+        /* Very short viewports (< 600px height) */
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.1rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+
+            /* Hide non-essential elements */
+            .nav-dots, .keyboard-hint, .decorative {
+                display: none;
+            }
+        }
+
+        /* Extremely short (landscape phones, < 500px height) */
+        @media (max-height: 500px) {
+            :root {
+                --slide-padding: clamp(0.4rem, 2vw, 1rem);
+                --title-size: clamp(1rem, 3.5vw, 1.5rem);
+                --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+                --body-size: clamp(0.65rem, 1vw, 0.85rem);
+            }
+        }
+
+        /* Narrow viewports (< 600px width) */
+        @media (max-width: 600px) {
+            :root {
+                --title-size: clamp(1.25rem, 7vw, 2.5rem);
+            }
+
+            /* Stack grids vertically */
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===========================================
+           REDUCED MOTION
+           =========================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* ===========================================
+           ELECTRIC STUDIO SPECIFIC STYLES
+           =========================================== */
+
+        /* Panel Layout */
+        .panel {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .panel-top {
+            top: 0;
+            left: 0;
+            height: 50%;
+            background: var(--bg-white);
+            border-bottom: 4px solid var(--accent-blue);
+        }
+
+        .panel-bottom {
+            bottom: 0;
+            left: 0;
+            height: 50%;
+            background: var(--bg-dark);
+        }
+
+        /* Full panel variant for content slides */
+        .panel-full {
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--bg-white);
+        }
+
+        .panel-full-dark {
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--bg-dark);
+        }
+
+        /* Brand Marks */
+        .brand-mark {
+            position: absolute;
+            font-size: var(--small-size);
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .brand-mark.top-left {
+            top: var(--slide-padding);
+            left: var(--slide-padding);
+        }
+
+        .brand-mark.top-right {
+            top: var(--slide-padding);
+            right: var(--slide-padding);
+        }
+
+        .brand-mark.bottom-left {
+            bottom: var(--slide-padding);
+            left: var(--slide-padding);
+        }
+
+        .brand-mark.bottom-right {
+            bottom: var(--slide-padding);
+            right: var(--slide-padding);
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .hero-title {
+            font-size: var(--title-size);
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            font-size: var(--h2-size);
+            font-weight: 400;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* Content Slide Styles */
+        .content-title {
+            font-size: var(--h2-size);
+            color: var(--text-dark);
+            margin-bottom: var(--content-gap);
+        }
+
+        .content-text {
+            font-size: var(--body-size);
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .content-text.light {
+            color: var(--text-light);
+        }
+
+        /* Lists */
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.6;
+            padding-left: 1.5em;
+            position: relative;
+            margin-bottom: var(--element-gap);
+        }
+
+        .bullet-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .feature-card {
+            background: rgba(67, 97, 238, 0.1);
+            border-left: 3px solid var(--accent-blue);
+            padding: var(--element-gap);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .feature-card-title {
+            font-size: var(--h3-size);
+            font-weight: 700;
+            margin-bottom: 0.5em;
+            color: var(--accent-blue);
+        }
+
+        .feature-card-text {
+            font-size: var(--body-size);
+            line-height: 1.4;
+        }
+
+        /* Images */
+        .slide-image {
+            max-width: 100%;
+            max-height: min(45vh, 350px);
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .image-grid-item {
+            text-align: center;
+        }
+
+        .image-grid-item img {
+            max-height: min(35vh, 280px);
+        }
+
+        .image-caption {
+            font-size: var(--small-size);
+            margin-top: 0.5em;
+            opacity: 0.7;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-blue);
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        /* Navigation Dots */
+        .nav-dots {
+            position: fixed;
+            right: var(--slide-padding);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-light);
+            opacity: 0.3;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-dot:hover {
+            opacity: 0.6;
+        }
+
+        .nav-dot.active {
+            opacity: 1;
+            background: var(--accent-blue);
+        }
+
+        /* Keyboard Hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: var(--slide-padding);
+            right: var(--slide-padding);
+            font-size: var(--small-size);
+            color: var(--text-light);
+            opacity: 0.4;
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stagger children */
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        /* ===========================================
+           INLINE EDITING
+           =========================================== */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .edit-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .edit-toggle.show,
+        .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .edit-toggle.active {
+            background: #ff5722;
+        }
+
+        .edit-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        [contenteditable="true"] {
+            outline: 2px dashed var(--accent-blue);
+            outline-offset: 4px;
+            min-height: 1em;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: 2px solid var(--accent-blue);
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        /* Save indicator */
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: var(--small-size);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar"></div>
+
+    <!-- Navigation Dots -->
+    <nav class="nav-dots"></nav>
+
+    <!-- Keyboard Hint -->
+    <div class="keyboard-hint">使用方向键或空格键导航</div>
+
+    <!-- Inline Editing Controls -->
+    <div class="edit-hotzone"></div>
+    <button class="edit-toggle" id="editToggle" title="编辑模式 (E)">✏️</button>
+    <div class="save-indicator" id="saveIndicator">已自动保存</div>
+
+    <!-- ===========================================
+         SLIDE 1: 封面
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-top">
+            <div class="brand-mark top-left">Frontend Slides</div>
+            <div class="brand-mark top-right">Skill Tutorial</div>
+            <h1 class="hero-title reveal">Frontend-Slides Skill<br/>使用教程</h1>
+        </div>
+        <div class="panel panel-bottom">
+            <div class="brand-mark bottom-left">零代码 · 炫酷特效 · 快速生成</div>
+            <div class="brand-mark bottom-right">01</div>
+            <p class="hero-subtitle reveal">打造专业级演示文稿的 AI 工具</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 2: 工具介绍
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full">
+            <div class="brand-mark top-left">About</div>
+            <div class="brand-mark top-right">02</div>
+            <div class="brand-mark bottom-left">什么是 Frontend-Slides</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 800px); margin: 0 auto;">
+                <h2 class="content-title reveal">什么是 Frontend-Slides？</h2>
+
+                <p class="content-text reveal" style="margin-bottom: var(--content-gap);">
+                    Frontend-Slides 是由<strong>张咋啦</strong>原创的 AI 演示文稿生成工具，在小红书获得 <strong>2.4 万赞</strong>的爆款工具。
+                </p>
+
+                <div class="feature-grid reveal">
+                    <div class="feature-card">
+                        <div class="feature-card-title">零代码</div>
+                        <div class="feature-card-text">无需任何编程或设计基础，通过对话即可生成专业 PPT</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-title">炫酷特效</div>
+                        <div class="feature-card-text">内置透视、光效、before & after 等高级动画效果</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-title">快速生成</div>
+                        <div class="feature-card-text">几分钟内完成从大纲到成品的全流程</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 3: 安装步骤
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full-dark">
+            <div class="brand-mark top-left" style="color: var(--text-light);">Install</div>
+            <div class="brand-mark top-right" style="color: var(--text-light);">03</div>
+            <div class="brand-mark bottom-left" style="color: var(--text-light);">三步完成安装</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 900px); margin: 0 auto;">
+                <h2 class="content-title reveal" style="color: var(--text-light);">安装步骤</h2>
+
+                <div class="image-grid reveal">
+                    <div class="image-grid-item">
+                        <img src="assets/唤醒skill.png" alt="唤醒 skill" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">在 Claude Code 中输入 /frontend-slides</div>
+                    </div>
+                </div>
+
+                <p class="reveal" style="text-align: center; margin-top: var(--content-gap);">
+                    <a href="https://github.com/zarazhangrui/frontend-slides" target="_blank" style="color: var(--accent-blue); text-decoration: none; font-weight: 600; font-size: var(--h3-size);">🔗 GitHub 仓库：https://github.com/zarazhangrui/frontend-slides</a>
+                </p>
+
+                <ul class="bullet-list reveal" style="margin-top: var(--content-gap); color: var(--text-light);">
+                    <li><strong>第一步：</strong>确保电脑已安装 Claude Code 或支持的 IDE（如 VS Code）</li>
+                    <li><strong>第二步：</strong>在终端中执行：<code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude</code></li>
+                    <li><strong>第三步：</strong>在 Claude Code 中输入 <code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">/frontend-slides</code>，出现功能提示即安装成功</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 4: 流程概览
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full">
+            <div class="brand-mark top-left">Process</div>
+            <div class="brand-mark top-right">04</div>
+            <div class="brand-mark bottom-left">制作 PPT 的四个步骤</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 800px); margin: 0 auto;">
+                <h2 class="content-title reveal">制作流程概览</h2>
+
+                <div class="feature-grid reveal">
+                    <div class="feature-card">
+                        <div class="feature-card-title">1️⃣ 明确需求</div>
+                        <div class="feature-card-text">回答工具关于用途、长度、内容的引导问题</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-title">2️⃣ 选择风格</div>
+                        <div class="feature-card-text">从多个设计风格预览中选择最喜欢的视觉效果</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-title">3️⃣ 生成内容</div>
+                        <div class="feature-card-text">导入大纲或笔记，AI 自动生成完整演示文稿</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-title">4️⃣ 调整完善</div>
+                        <div class="feature-card-text">在线编辑细节，或通过对话进行较大改动</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: 需求确认
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full-dark">
+            <div class="brand-mark top-left" style="color: var(--text-light);">Step 1</div>
+            <div class="brand-mark top-right" style="color: var(--text-light);">05</div>
+            <div class="brand-mark bottom-left" style="color: var(--text-light);">回答工具引导问题</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 1000px); margin: 0 auto;">
+                <h2 class="content-title reveal" style="color: var(--text-light);">需求确认阶段</h2>
+
+                <p class="content-text light reveal" style="margin-bottom: var(--content-gap);">
+                    工具会通过一系列问题了解你的需求，包括用途、页数、内容准备情况等。
+                </p>
+
+                <div class="image-grid reveal">
+                    <div class="image-grid-item">
+                        <img src="assets/了解需求.png" alt="了解需求" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">工具询问需求</div>
+                    </div>
+                    <div class="image-grid-item">
+                        <img src="assets/需求选择完毕.png" alt="需求选择完毕" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">完成选择</div>
+                    </div>
+                    <div class="image-grid-item">
+                        <img src="assets/上传内容.png" alt="上传内容" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">上传内容</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 6: 风格选择
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full">
+            <div class="brand-mark top-left">Step 2</div>
+            <div class="brand-mark top-right">06</div>
+            <div class="brand-mark bottom-left">预览并选择设计风格</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 1000px); margin: 0 auto;">
+                <h2 class="content-title reveal">风格选择阶段</h2>
+
+                <p class="content-text reveal" style="margin-bottom: var(--content-gap);">
+                    根据你想要的观众感受，工具会生成 3 个不同风格的真实预览供你选择。
+                </p>
+
+                <div class="image-grid reveal">
+                    <div class="image-grid-item">
+                        <img src="assets/可选风格1.png" alt="可选风格1" class="slide-image">
+                        <div class="image-caption">风格预览 A</div>
+                    </div>
+                    <div class="image-grid-item">
+                        <img src="assets/可选风格2.png" alt="可选风格2" class="slide-image">
+                        <div class="image-caption">风格预览 B</div>
+                    </div>
+                    <div class="image-grid-item">
+                        <img src="assets/可选风格3.png" alt="可选风格3" class="slide-image">
+                        <div class="image-caption">风格预览 C</div>
+                    </div>
+                </div>
+
+                <p class="content-text reveal" style="margin-top: var(--content-gap);">
+                    每个预览都是完整的 HTML 文件，可以真实看到最终的视觉效果。选择后确认即可。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 7: 内容编辑
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-full-dark">
+            <div class="brand-mark top-left" style="color: var(--text-light);">Step 3</div>
+            <div class="brand-mark top-right" style="color: var(--text-light);">07</div>
+            <div class="brand-mark bottom-left" style="color: var(--text-light);">在线编辑和调整</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 900px); margin: 0 auto;">
+                <h2 class="content-title reveal" style="color: var(--text-light);">内容编辑阶段</h2>
+
+                <div class="image-grid reveal">
+                    <div class="image-grid-item">
+                        <img src="assets/调整导航.png" alt="编辑模式界面" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">编辑模式（左上角编辑按钮）</div>
+                    </div>
+                    <div class="image-grid-item">
+                        <img src="assets/细节调整.png" alt="细节调整" class="slide-image">
+                        <div class="image-caption" style="color: var(--text-light);">细节调整</div>
+                    </div>
+                </div>
+
+                <ul class="bullet-list reveal" style="margin-top: var(--content-gap); color: var(--text-light);">
+                    <li><strong>在线编辑：</strong>悬停在左上角或按 E 键进入编辑模式，点击任何文字直接修改</li>
+                    <li><strong>自动保存：</strong>所有修改自动保存到浏览器本地存储，随时恢复</li>
+                    <li><strong>对话调整：</strong>需要大改动时，直接告诉 AI，如"换一个更鲜艳的配色"</li>
+                    <li><strong>导出分享：</strong>完成后可部署为在线链接或导出为 PDF</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 8: 核心优势
+         =========================================== -->
+    <section class="slide">
+        <div class="panel panel-top">
+            <div class="brand-mark top-left">Why Frontend-Slides</div>
+            <div class="brand-mark top-right">08</div>
+            <h1 class="hero-title reveal">核心优势</h1>
+        </div>
+        <div class="panel panel-bottom">
+            <div class="brand-mark bottom-left">为什么选择 Frontend-Slides</div>
+
+            <div class="slide-content" style="max-width: min(90vw, 900px); margin: 0 auto;">
+                <div class="feature-grid reveal">
+                    <div class="feature-card" style="background: rgba(255,255,255,0.1); border-left-color: var(--text-light);">
+                        <div class="feature-card-title" style="color: var(--text-light);">无需代码</div>
+                        <div class="feature-card-text" style="color: var(--text-light);">完全零门槛，不需要任何 HTML/CSS/JavaScript 知识</div>
+                    </div>
+                    <div class="feature-card" style="background: rgba(255,255,255,0.1); border-left-color: var(--text-light);">
+                        <div class="feature-card-title" style="color: var(--text-light);">炫酷特效</div>
+                        <div class="feature-card-text" style="color: var(--text-light);">内置透视、光效、before & after 等高级动画</div>
+                    </div>
+                    <div class="feature-card" style="background: rgba(255,255,255,0.1); border-left-color: var(--text-light);">
+                        <div class="feature-card-title" style="color: var(--text-light);">快速生成</div>
+                        <div class="feature-card-text" style="color: var(--text-light);">几分钟内完成从想法到成品的全流程</div>
+                    </div>
+                    <div class="feature-card" style="background: rgba(255,255,255,0.1); border-left-color: var(--text-light);">
+                        <div class="feature-card-title" style="color: var(--text-light);">专业质量</div>
+                        <div class="feature-card-text" style="color: var(--text-light);">输出精美的 HTML 演示文稿，适配所有设备</div>
+                    </div>
+                </div>
+
+                <p class="hero-subtitle reveal" style="margin-top: var(--content-gap); white-space: nowrap;">
+                    立即尝试，将你的想法转化为专业的演示文稿
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const options = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.5
+                };
+
+                this.observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const index = Array.from(this.slides).indexOf(entry.target);
+                            this.currentSlide = index;
+                            this.updateProgressBar();
+                            this.updateNavDots();
+                        }
+                    });
+                }, options);
+
+                this.slides.forEach(slide => {
+                    this.observer.observe(slide);
+                });
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    // Skip if editing text
+                    if (e.target.getAttribute('contenteditable') === 'true') return;
+
+                    switch(e.key) {
+                        case 'ArrowDown':
+                        case 'ArrowRight':
+                        case ' ':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide + 1);
+                            break;
+                        case 'ArrowUp':
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide - 1);
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.slides.length - 1);
+                            break;
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartY = 0;
+                let touchEndY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe();
+                }, { passive: true });
+
+                this.handleSwipe = () => {
+                    const swipeThreshold = 50;
+                    const diff = touchStartY - touchEndY;
+
+                    if (Math.abs(diff) > swipeThreshold) {
+                        if (diff > 0) {
+                            this.goToSlide(this.currentSlide + 1);
+                        } else {
+                            this.goToSlide(this.currentSlide - 1);
+                        }
+                    }
+                };
+            }
+
+            setupProgressBar() {
+                this.progressBar = document.querySelector('.progress-bar');
+            }
+
+            setupNavDots() {
+                this.navDots = document.querySelector('.nav-dots');
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.classList.add('nav-dot');
+                    if (index === 0) dot.classList.add('active');
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    this.navDots.appendChild(dot);
+                });
+            }
+
+            goToSlide(index) {
+                if (index < 0 || index >= this.slides.length) return;
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+
+            updateProgressBar() {
+                const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+                this.progressBar.style.width = `${progress}%`;
+            }
+
+            updateNavDots() {
+                const dots = this.navDots.querySelectorAll('.nav-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+        }
+
+        /* ===========================================
+           INLINE EDITING CONTROLLER
+           =========================================== */
+        class InlineEditor {
+            constructor() {
+                this.isActive = false;
+                this.editToggle = document.getElementById('editToggle');
+                this.hotzone = document.querySelector('.edit-hotzone');
+                this.saveIndicator = document.getElementById('saveIndicator');
+                this.saveTimeout = null;
+                this.setupToggle();
+                this.setupHotzone();
+                this.setupKeyboard();
+                this.loadFromStorage();
+            }
+
+            setupToggle() {
+                this.editToggle.addEventListener('click', () => {
+                    this.toggleEditMode();
+                });
+            }
+
+            setupHotzone() {
+                let hideTimeout = null;
+
+                this.hotzone.addEventListener('mouseenter', () => {
+                    clearTimeout(hideTimeout);
+                    this.editToggle.classList.add('show');
+                });
+
+                this.hotzone.addEventListener('mouseleave', () => {
+                    hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.editToggle.classList.remove('show');
+                    }, 400);
+                });
+
+                this.editToggle.addEventListener('mouseenter', () => {
+                    clearTimeout(hideTimeout);
+                });
+
+                this.editToggle.addEventListener('mouseleave', () => {
+                    hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.editToggle.classList.remove('show');
+                    }, 400);
+                });
+
+                this.hotzone.addEventListener('click', () => {
+                    this.toggleEditMode();
+                });
+            }
+
+            setupKeyboard() {
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                        this.toggleEditMode();
+                    }
+                });
+            }
+
+            toggleEditMode() {
+                this.isActive = !this.isActive;
+                this.editToggle.classList.toggle('active', this.isActive);
+
+                document.querySelectorAll('h1, h2, h3, p, li, .feature-card-title, .feature-card-text').forEach(el => {
+                    el.setAttribute('contenteditable', this.isActive);
+                });
+
+                if (this.isActive) {
+                    this.editToggle.textContent = '✓';
+                    this.editToggle.title = '退出编辑 (E)';
+                } else {
+                    this.editToggle.textContent = '✏️';
+                    this.editToggle.title = '编辑模式 (E)';
+                    this.saveToStorage();
+                }
+            }
+
+            saveToStorage() {
+                const content = {};
+                document.querySelectorAll('[contenteditable="true"]').forEach((el, index) => {
+                    content[`element_${index}`] = el.innerHTML;
+                });
+                localStorage.setItem('frontendSlidesContent', JSON.stringify(content));
+                this.showSaveIndicator();
+            }
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('frontendSlidesContent');
+                if (saved) {
+                    const content = JSON.parse(saved);
+                    const elements = document.querySelectorAll('h1, h2, h3, p, li, .feature-card-title, .feature-card-text');
+                    Object.keys(content).forEach((key, index) => {
+                        if (elements[index]) {
+                            elements[index].innerHTML = content[key];
+                        }
+                    });
+                }
+            }
+
+            showSaveIndicator() {
+                this.saveIndicator.classList.add('show');
+                setTimeout(() => {
+                    this.saveIndicator.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        // Initialize
+        const presentation = new SlidePresentation();
+        const editor = new InlineEditor();
+    </script>
+</body>
+</html>
